@@ -1,21 +1,33 @@
-import { NextResponse } from "next/server";
-import { copywriterAgent } from "@/lib/agents/copywriter";
 import { saveDrafts } from "@/lib/db";
-import type { CopywriterInput } from "@/lib/types";
+import { copywriterAgent } from "@/lib/agents/copywriter";
+import {
+  errorResponse,
+  parseCopywriterInput,
+  readJsonBody,
+  successResponse,
+} from "@/lib/agents/http";
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as Partial<CopywriterInput>;
+  try {
+    const body = await readJsonBody(request);
+    const input = parseCopywriterInput(body);
+    const drafts = await copywriterAgent(input);
 
-  if (!body.idea) {
-    return NextResponse.json(
-      { error: "idea is required" },
-      { status: 400 },
+    saveDrafts(drafts);
+
+    return successResponse(
+      {
+        idea: input.idea,
+        drafts,
+      },
+      {
+        draftCount: drafts.length,
+        ideaId: input.idea.id,
+        platform: "threads",
+      },
+      201,
     );
+  } catch (error) {
+    return errorResponse(error);
   }
-
-  const drafts = await copywriterAgent({ idea: body.idea });
-  saveDrafts(drafts);
-
-  return NextResponse.json({ drafts });
 }
-

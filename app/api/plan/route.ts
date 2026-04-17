@@ -1,13 +1,28 @@
-import { NextResponse } from "next/server";
 import { plannerAgent } from "@/lib/agents/planner";
-import type { PlannerInput } from "@/lib/types";
+import {
+  countMeaningfulLines,
+  errorResponse,
+  parsePlannerInput,
+  readJsonBody,
+  successResponse,
+} from "@/lib/agents/http";
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as Partial<PlannerInput>;
-  const notes = body.notes?.trim() ?? "";
+  try {
+    const body = await readJsonBody(request);
+    const input = parsePlannerInput(body);
+    const ideas = await plannerAgent(input);
+    const sourceLineCount = countMeaningfulLines(input.notes);
 
-  const ideas = await plannerAgent({ notes });
-
-  return NextResponse.json({ ideas });
+    return successResponse(
+      { ideas },
+      {
+        ideaCount: ideas.length,
+        sourceLineCount,
+        usedFallbackNotes: sourceLineCount === 0,
+      },
+    );
+  } catch (error) {
+    return errorResponse(error);
+  }
 }
-

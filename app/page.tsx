@@ -42,6 +42,92 @@ export default function HomePage() {
   const [isAnalyzing, startAnalyzing] = useTransition();
 
   const selectedIdea = ideas.find((idea) => idea.id === selectedIdeaId);
+  const selectedDraft = drafts.find((draft) => draft.body === metricForm.text);
+  const noteLineCount = notes
+    .split("\n")
+    .filter((line) => line.trim().length > 0).length;
+  const totalEngagement =
+    Number(metricForm.likes || 0) +
+    Number(metricForm.comments || 0) +
+    Number(metricForm.saves || 0);
+  const impressionCount = Number(metricForm.impressions || 0);
+  const engagementRate =
+    impressionCount > 0
+      ? ((totalEngagement / impressionCount) * 100).toFixed(1)
+      : null;
+  const workflowStages = [
+    {
+      id: "planner",
+      step: "01",
+      role: "Planner",
+      title: "메모를 오늘의 후보 주제로 정리",
+      summary: "업데이트와 사용자 피드백에서 지금 올릴 만한 소재를 추린다.",
+      state: isPlanning ? "active" : ideas.length > 0 ? "complete" : "ready",
+      stateLabel: isPlanning
+        ? "실행 중"
+        : ideas.length > 0
+          ? "후보 준비됨"
+          : "입력 대기",
+      detail:
+        ideas.length > 0
+          ? `${ideas.length}개 후보 생성`
+          : `${noteLineCount}줄 메모 로드됨`,
+    },
+    {
+      id: "copywriter",
+      step: "02",
+      role: "Copywriter",
+      title: "선택 주제를 게시글 초안으로 확장",
+      summary: "선택된 angle과 CTA를 바탕으로 여러 버전의 카피를 제안한다.",
+      state: isGenerating
+        ? "active"
+        : drafts.length > 0
+          ? "complete"
+          : selectedIdea
+            ? "ready"
+            : "blocked",
+      stateLabel: isGenerating
+        ? "작성 중"
+        : drafts.length > 0
+          ? "초안 준비됨"
+          : selectedIdea
+            ? "주제 선택됨"
+            : "주제 필요",
+      detail: drafts.length > 0
+        ? `${drafts.length}개 초안 대기`
+        : selectedIdea
+          ? `목표: ${selectedIdea.goal}`
+          : "Planner handoff 대기",
+    },
+    {
+      id: "analyst",
+      step: "03",
+      role: "Analyst",
+      title: "실제 반응을 읽고 다음 실험 제안",
+      summary: "사람이 입력한 성과 수치를 바탕으로 반복할 포맷을 정리한다.",
+      state: isAnalyzing
+        ? "active"
+        : analysis
+          ? "complete"
+          : metricForm.text.trim()
+            ? "ready"
+            : "blocked",
+      stateLabel: isAnalyzing
+        ? "분석 중"
+        : analysis
+          ? "요약 완료"
+          : metricForm.text.trim()
+            ? "입력 준비됨"
+            : "텍스트 필요",
+      detail: analysis
+        ? `${analysis.insightBullets.length}개 인사이트 정리`
+        : selectedDraft
+          ? "Copywriter 초안 연결됨"
+          : metricForm.text.trim()
+            ? "직접 입력 텍스트 사용"
+            : "성과 입력 대기",
+    },
+  ];
 
   const requestPlan = () => {
     startPlanning(async () => {
@@ -116,31 +202,102 @@ export default function HomePage() {
 
   return (
     <main className="shell">
-      <section className="hero">
-        <span className="eyebrow">HealthLog AI Marketing Team</span>
-        <h1>헬스로그 마케팅 팀을 위한 첫 콘솔</h1>
-        <p>
-          Planner가 오늘의 주제를 정하고, Copywriter가 초안을 만들고,
-          Analyst가 반응을 요약한다. 지금 버전은 mock 기반 MVP라서 외부 API
-          없이도 흐름을 검증할 수 있다.
-        </p>
-        <div className="pill-list">
-          <span className="pill">Planner</span>
-          <span className="pill">Copywriter</span>
-          <span className="pill">Analyst</span>
-          <span className="pill">Manual Approval First</span>
+      <section className="hero-panel">
+        <div className="hero-copy">
+          <span className="eyebrow">HealthLog AI Marketing Team</span>
+          <h1>Planner -&gt; Copywriter -&gt; Analyst handoff를 한 화면에서 관리</h1>
+          <p>
+            Planner가 메모를 주제로 정리하고, Copywriter가 초안을 만들고,
+            Analyst가 반응을 읽는다. 지금 버전은 mock 기반 수동 루프라서 외부
+            API 없이도 사람이 각 단계를 검토하며 흐름을 검증할 수 있다.
+          </p>
+          <div className="pill-list">
+            <span className="pill">Planner</span>
+            <span className="pill">Copywriter</span>
+            <span className="pill">Analyst</span>
+            <span className="pill">Manual Approval First</span>
+          </div>
+          <div className="hero-stats">
+            <div className="hero-stat">
+              <strong>{noteLineCount}</strong>
+              <span>메모 줄 수</span>
+            </div>
+            <div className="hero-stat">
+              <strong>{ideas.length}</strong>
+              <span>추천 주제</span>
+            </div>
+            <div className="hero-stat">
+              <strong>{drafts.length}</strong>
+              <span>생성 초안</span>
+            </div>
+            <div className="hero-stat">
+              <strong>{analysis ? analysis.insightBullets.length : 0}</strong>
+              <span>분석 인사이트</span>
+            </div>
+          </div>
         </div>
+
+        <aside className="hero-board">
+          <div className="section-head">
+            <div className="section-heading">
+              <span className="section-index">Manual Loop</span>
+              <h2>오늘의 운영 상태</h2>
+              <p>
+                자동 게시보다 사람 검토를 우선하는 MVP다. 각 단계 출력물을 확인한
+                뒤 다음 단계로 넘긴다.
+              </p>
+            </div>
+            <span className="hint">Human in the loop</span>
+          </div>
+
+          <div className="workflow-track">
+            {workflowStages.map((stage) => (
+              <article
+                key={stage.id}
+                className={`workflow-node is-${stage.state}`}
+              >
+                <div className="workflow-step">{stage.step}</div>
+                <div className="workflow-body">
+                  <div className="workflow-meta">
+                    <span className="workflow-role">{stage.role}</span>
+                    <span className="workflow-state">{stage.stateLabel}</span>
+                  </div>
+                  <strong>{stage.title}</strong>
+                  <p>{stage.summary}</p>
+                  <span className="workflow-detail">{stage.detail}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div
+            aria-live="polite"
+            className={`status-panel${status ? "" : " is-muted"}`}
+          >
+            <span className="micro-label">
+              {status ? "Latest update" : "Current mode"}
+            </span>
+            <strong>
+              {status ||
+                "수동 승인 중심으로 흐름을 검증하는 중이다. Planner 출력물을 고르고, Copywriter 초안을 연결한 뒤, Analyst에게 실제 반응을 넘긴다."}
+            </strong>
+          </div>
+        </aside>
       </section>
 
       <section className="grid">
         <div className="column">
-          <article className="card">
+          <article className="card card-tone-planner">
             <div className="section-head">
-              <div>
+              <div className="section-heading">
+                <span className="section-index">Step 01</span>
                 <h2>1. Source Notes</h2>
-                <p>업데이트, 사용자 피드백, 관찰 메모를 넣으면 Planner가 주제를 뽑는다.</p>
+                <p>
+                  업데이트, 사용자 피드백, 관찰 메모를 모아 Planner에게 오늘의
+                  주제 후보를 맡긴다.
+                </p>
               </div>
-              <span className="hint">PRD Flow A</span>
+              <span className="hint">Planner Input</span>
             </div>
             <div className="field">
               <label htmlFor="notes">마케팅 입력 메모</label>
@@ -150,7 +307,11 @@ export default function HomePage() {
                 onChange={(event) => setNotes(event.target.value)}
               />
             </div>
-            <div className="actions">
+            <div className="card-foot">
+              <p className="foot-note">
+                {noteLineCount}줄의 메모가 로드되어 있다. 짧은 bullet만 넣어도
+                Planner 흐름을 바로 테스트할 수 있다.
+              </p>
               <button
                 className="primary"
                 type="button"
@@ -162,43 +323,81 @@ export default function HomePage() {
             </div>
           </article>
 
-          <article className="card">
+          <article className="card card-tone-planner">
             <div className="section-head">
-              <div>
+              <div className="section-heading">
+                <span className="section-index">Step 02</span>
                 <h2>2. Planned Ideas</h2>
-                <p>오늘 올릴 만한 콘텐츠 후보를 선택한다.</p>
+                <p>오늘 올릴 만한 콘텐츠 후보를 고르고 Copywriter로 넘긴다.</p>
               </div>
               <span className="hint">Planner Output</span>
             </div>
+            {selectedIdea ? (
+              <div className="selected-brief">
+                <div className="selected-brief-head">
+                  <div>
+                    <span className="micro-label">Selected brief</span>
+                    <strong>{selectedIdea.theme}</strong>
+                  </div>
+                  <span className="tag">{selectedIdea.goal}</span>
+                </div>
+                <p>{selectedIdea.angle}</p>
+                <div className="brief-meta">
+                  <span>CTA</span>
+                  <strong>{selectedIdea.cta}</strong>
+                </div>
+              </div>
+            ) : null}
             {ideas.length === 0 ? (
-              <div className="empty">아직 생성된 주제가 없다. 위에서 메모를 넣고 Planner를 실행해줘.</div>
+              <div className="empty">
+                아직 생성된 주제가 없다. 위에서 메모를 넣고 Planner를 실행해줘.
+              </div>
             ) : (
               <div className="idea-list">
-                {ideas.map((idea) => (
-                  <label key={idea.id} className="idea">
+                {ideas.map((idea, index) => (
+                  <label
+                    key={idea.id}
+                    className={`idea${
+                      selectedIdeaId === idea.id ? " is-selected" : ""
+                    }`}
+                  >
+                    <input
+                      checked={selectedIdeaId === idea.id}
+                      className="idea-radio"
+                      name="idea"
+                      type="radio"
+                      value={idea.id}
+                      onChange={() => setSelectedIdeaId(idea.id)}
+                    />
+                    <div className="idea-topline">
+                      <span className="idea-badge">Option {index + 1}</span>
+                      <span className="tag">{idea.goal}</span>
+                    </div>
                     <header>
                       <h3>{idea.theme}</h3>
-                      <span className="tag">{idea.goal}</span>
                     </header>
                     <p>{idea.angle}</p>
                     <div className="meta">
                       <span>CTA: {idea.cta}</span>
                     </div>
-                    <div className="actions">
-                      <input
-                        checked={selectedIdeaId === idea.id}
-                        name="idea"
-                        type="radio"
-                        value={idea.id}
-                        onChange={() => setSelectedIdeaId(idea.id)}
-                      />
-                      <span>이 주제를 선택</span>
+                    <div className="choice-row">
+                      <span className="choice-dot" aria-hidden="true" />
+                      <span>
+                        {selectedIdeaId === idea.id
+                          ? "이 주제가 Copywriter 입력으로 연결된다."
+                          : "이 주제로 진행"}
+                      </span>
                     </div>
                   </label>
                 ))}
               </div>
             )}
-            <div className="actions">
+            <div className="card-foot">
+              <p className="foot-note">
+                {selectedIdea
+                  ? "선택한 브리프가 바로 Copywriter 입력으로 넘어간다."
+                  : "Planner 후보를 하나 고르면 Copywriter를 실행할 수 있다."}
+              </p>
               <button
                 className="secondary"
                 type="button"
@@ -210,23 +409,54 @@ export default function HomePage() {
             </div>
           </article>
 
-          <article className="card">
+          <article className="card card-tone-copy">
             <div className="section-head">
-              <div>
+              <div className="section-heading">
+                <span className="section-index">Step 03</span>
                 <h2>3. Drafts</h2>
-                <p>Copywriter가 Threads 초안을 3개 제안한다.</p>
+                <p>
+                  Copywriter가 선택한 주제를 여러 버전의 Threads 초안으로 풀어낸다.
+                </p>
               </div>
               <span className="hint">Copywriter Output</span>
+            </div>
+            <div className="selected-brief draft-context">
+              <div className="selected-brief-head">
+                <div>
+                  <span className="micro-label">Copywriter input</span>
+                  <strong>{selectedIdea?.theme ?? "주제 선택 대기"}</strong>
+                </div>
+                <span className="tag">
+                  {selectedIdea?.goal ?? "Planner required"}
+                </span>
+              </div>
+              <p>
+                {selectedIdea?.angle ??
+                  "Planner에서 오늘의 주제를 하나 선택하면 이 영역에서 초안을 만들 수 있다."}
+              </p>
             </div>
             {drafts.length === 0 ? (
               <div className="empty">선택한 주제로 아직 생성된 초안이 없다.</div>
             ) : (
               <div className="draft-list">
-                {drafts.map((draft) => (
-                  <article key={draft.id} className="draft">
+                {drafts.map((draft, index) => (
+                  <article
+                    key={draft.id}
+                    className={`draft${
+                      selectedDraft?.id === draft.id ? " is-linked" : ""
+                    }`}
+                  >
+                    <div className="draft-topline">
+                      <span className="idea-badge">Draft {index + 1}</span>
+                      <div className="tag-cluster">
+                        <span className="tag">{draft.platform}</span>
+                        {selectedDraft?.id === draft.id ? (
+                          <span className="tag tag-success">Analyst input</span>
+                        ) : null}
+                      </div>
+                    </div>
                     <header>
                       <h3>{draft.hook}</h3>
-                      <span className="tag">{draft.platform}</span>
                     </header>
                     <div className="draft-body">{draft.body}</div>
                     <div className="meta">
@@ -234,6 +464,7 @@ export default function HomePage() {
                     </div>
                     <div className="actions">
                       <button
+                        aria-pressed={selectedDraft?.id === draft.id}
                         className="secondary"
                         type="button"
                         onClick={() =>
@@ -243,7 +474,9 @@ export default function HomePage() {
                           }))
                         }
                       >
-                        성과 입력 대상으로 사용
+                        {selectedDraft?.id === draft.id
+                          ? "분석 입력에 연결됨"
+                          : "분석 입력에 연결"}
                       </button>
                     </div>
                   </article>
@@ -253,14 +486,91 @@ export default function HomePage() {
           </article>
         </div>
 
-        <div className="column">
-          <article className="card">
+        <div className="column column-side">
+          <article className="card rail-card">
             <div className="section-head">
-              <div>
+              <div className="section-heading">
+                <span className="section-index">Ops Guide</span>
+                <h2>Manual approval checkpoints</h2>
+                <p>
+                  이 MVP는 완전 자동화보다 handoff를 명확히 보는 데 집중한다.
+                </p>
+              </div>
+              <span className="hint">Review before ship</span>
+            </div>
+            <div className="checkpoint-list">
+              <div className="checkpoint">
+                <span className="checkpoint-role">Planner</span>
+                <strong>메모가 충분한지 먼저 확인</strong>
+                <p>
+                  업데이트, 피드백, 관찰 포인트를 넣은 뒤 주제 후보를 생성한다.
+                </p>
+              </div>
+              <div className="checkpoint">
+                <span className="checkpoint-role">Copywriter</span>
+                <strong>가장 설득력 있는 angle 하나를 선택</strong>
+                <p>
+                  선택한 주제로 초안을 만든 뒤 게시할 버전이나 실험할 버전을 고른다.
+                </p>
+              </div>
+              <div className="checkpoint">
+                <span className="checkpoint-role">Analyst</span>
+                <strong>실제 반응과 정성 메모를 함께 남김</strong>
+                <p>
+                  수치만이 아니라 댓글 톤과 저장 이유까지 적어야 다음 전략이 선명해진다.
+                </p>
+              </div>
+            </div>
+          </article>
+
+          <article className="card card-tone-analyst">
+            <div className="section-head">
+              <div className="section-heading">
+                <span className="section-index">Step 04</span>
                 <h2>4. Manual Result Input</h2>
                 <p>게시 후 성과를 직접 적어주면 Analyst가 패턴을 정리한다.</p>
               </div>
               <span className="hint">Manual Loop MVP</span>
+            </div>
+            <div className="snapshot-strip">
+              <div className="mini-stat">
+                <span>분석 대상</span>
+                <strong>
+                  {selectedDraft
+                    ? "Copywriter 연결됨"
+                    : metricForm.text.trim()
+                      ? "직접 입력"
+                      : "미정"}
+                </strong>
+              </div>
+              <div className="mini-stat">
+                <span>가시 반응 합계</span>
+                <strong>{totalEngagement.toLocaleString()}</strong>
+              </div>
+              <div className="mini-stat">
+                <span>참여율 추정</span>
+                <strong>{engagementRate ? `${engagementRate}%` : "계산 대기"}</strong>
+              </div>
+            </div>
+            <div className="selected-brief analysis-target">
+              <div className="selected-brief-head">
+                <div>
+                  <span className="micro-label">Current analysis target</span>
+                  <strong>
+                    {selectedDraft
+                      ? selectedDraft.hook
+                      : metricForm.text.trim()
+                        ? "직접 입력한 게시글"
+                        : "아직 연결된 게시글 없음"}
+                  </strong>
+                </div>
+                <span className="tag">{metricForm.platform}</span>
+              </div>
+              <p>
+                {selectedDraft
+                  ? "선택한 초안이 텍스트 필드에 반영되어 있다. 게시 후 실제 수치만 추가하면 된다."
+                  : "직접 작성한 텍스트를 붙여넣어도 Analyst 흐름을 테스트할 수 있다."}
+              </p>
             </div>
             <div className="field">
               <label htmlFor="text">게시글 텍스트</label>
@@ -292,7 +602,7 @@ export default function HomePage() {
                 <option value="x">X</option>
               </select>
             </div>
-            <div className="summary-grid">
+            <div className="metric-grid">
               <div className="field">
                 <label htmlFor="likes">좋아요</label>
                 <input
@@ -335,20 +645,20 @@ export default function HomePage() {
                   }
                 />
               </div>
-            </div>
-            <div className="field">
-              <label htmlFor="impressions">노출 수</label>
-              <input
-                id="impressions"
-                type="number"
-                value={metricForm.impressions}
-                onChange={(event) =>
-                  setMetricForm((current) => ({
-                    ...current,
-                    impressions: event.target.value,
-                  }))
-                }
-              />
+              <div className="field">
+                <label htmlFor="impressions">노출 수</label>
+                <input
+                  id="impressions"
+                  type="number"
+                  value={metricForm.impressions}
+                  onChange={(event) =>
+                    setMetricForm((current) => ({
+                      ...current,
+                      impressions: event.target.value,
+                    }))
+                  }
+                />
+              </div>
             </div>
             <div className="field">
               <label htmlFor="memo">관찰 메모</label>
@@ -363,7 +673,11 @@ export default function HomePage() {
                 }
               />
             </div>
-            <div className="actions">
+            <div className="card-foot">
+              <p className="foot-note">
+                댓글 톤, 저장 이유, 게시 타이밍 같은 정성 메모를 함께 남기면
+                Analyst 요약이 훨씬 더 유용해진다.
+              </p>
               <button
                 className="primary"
                 type="button"
@@ -375,18 +689,36 @@ export default function HomePage() {
             </div>
           </article>
 
-          <article className="card">
+          <article className="card card-tone-analyst">
             <div className="section-head">
-              <div>
+              <div className="section-heading">
+                <span className="section-index">Step 05</span>
                 <h2>5. Analyst Summary</h2>
                 <p>최근 성과를 바탕으로 다음에 반복할 포맷을 잡는다.</p>
               </div>
               <span className="hint">Analyst Output</span>
             </div>
             {!analysis ? (
-              <div className="empty">성과 데이터를 넣고 Analyst를 실행하면 요약이 여기에 쌓인다.</div>
+              <div className="empty">
+                성과 데이터를 넣고 Analyst를 실행하면, 반복할 패턴과 다음 전략이
+                여기에 정리된다.
+              </div>
             ) : (
               <>
+                <div className="snapshot-strip compact">
+                  <div className="mini-stat">
+                    <span>분석 기반 노출</span>
+                    <strong>{impressionCount.toLocaleString()}</strong>
+                  </div>
+                  <div className="mini-stat">
+                    <span>반응 행동 합계</span>
+                    <strong>{totalEngagement.toLocaleString()}</strong>
+                  </div>
+                  <div className="mini-stat">
+                    <span>도출 인사이트</span>
+                    <strong>{analysis.insightBullets.length}</strong>
+                  </div>
+                </div>
                 <div className="summary-grid">
                   <div className="summary-box">
                     <strong>Best Hook Pattern</strong>
@@ -410,11 +742,9 @@ export default function HomePage() {
                 </div>
               </>
             )}
-            {status ? <div className="status">{status}</div> : null}
           </article>
         </div>
       </section>
     </main>
   );
 }
-
