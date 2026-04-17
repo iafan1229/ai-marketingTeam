@@ -1,4 +1,5 @@
 import { plannerAgent } from "@/lib/agents/planner";
+import { healthlogRepository } from "@/lib/db";
 import {
   countMeaningfulLines,
   errorResponse,
@@ -13,6 +14,8 @@ export async function POST(request: Request) {
     const input = parsePlannerInput(body);
     const ideas = await plannerAgent(input);
     const sourceLineCount = countMeaningfulLines(input.notes);
+
+    healthlogRepository.ideas.saveMany(ideas, { sourceNotes: input.notes });
 
     return successResponse(
       { ideas },

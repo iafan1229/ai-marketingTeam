@@ -1,4 +1,4 @@
-import { saveDrafts } from "@/lib/db";
+import { healthlogRepository } from "@/lib/db";
 import { copywriterAgent } from "@/lib/agents/copywriter";
 import {
   errorResponse,
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const input = parseCopywriterInput(body);
     const drafts = await copywriterAgent(input);
 
-    saveDrafts(drafts);
+    healthlogRepository.drafts.saveMany(drafts);
 
     return successResponse(
       {

@@ -1,11 +1,11 @@
 import { analystAgent } from "@/lib/agents/analyst";
+import { healthlogRepository } from "@/lib/db";
 import {
   errorResponse,
   parsePostResultInput,
   readJsonBody,
   successResponse,
 } from "@/lib/agents/http";
-import { listPostResults, saveInsight, savePostResult } from "@/lib/db";
 import type { PostResult } from "@/lib/types";
 
 export async function POST(request: Request) {
@@ -25,14 +25,14 @@ export async function POST(request: Request) {
       notes: input.notes,
     };
 
-    savePostResult(result);
+    healthlogRepository.postResults.save(result);
 
-    const allResults = listPostResults();
+    const allResults = healthlogRepository.postResults.list();
     const summary = await analystAgent(allResults);
 
-    saveInsight("hook", summary.bestHookPattern);
-    saveInsight("weakness", summary.weakPattern);
-    saveInsight("strategy", summary.nextStrategy);
+    healthlogRepository.insights.save("hook", summary.bestHookPattern);
+    healthlogRepository.insights.save("weakness", summary.weakPattern);
+    healthlogRepository.insights.save("strategy", summary.nextStrategy);
 
     return successResponse(
       {

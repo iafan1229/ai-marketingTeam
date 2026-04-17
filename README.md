@@ -14,6 +14,7 @@ HealthLog AI Marketing Team의 초기 MVP 저장소다.
 
 - [PRD](./docs/prd/README.md)
 - [Codex Multi-Agent Working Plan](./docs/prd/codex-multi-agent-workflow.md)
+- [Mock to Real Transition Plan](./docs/prd/mock-to-real-transition-plan.md)
 
 ## 시작 방법
 

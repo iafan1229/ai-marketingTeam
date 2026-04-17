@@ -7,7 +7,9 @@
 - 작성일: 2026-04-17
 - 대상 프로젝트: HealthLog AI Marketing Team
 - 문서 목적: 헬스로그 앱을 홍보하고 학습하는 AI 마케팅 팀의 MVP 범위와 요구사항 정의
-- 관련 문서: [Codex Multi-Agent Working Plan](./codex-multi-agent-workflow.md)
+- 관련 문서:
+  - [Codex Multi-Agent Working Plan](./codex-multi-agent-workflow.md)
+  - [Mock to Real Transition Plan](./mock-to-real-transition-plan.md)
 
 ## 1. 배경
 
