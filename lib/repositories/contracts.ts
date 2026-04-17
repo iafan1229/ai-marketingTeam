@@ -32,49 +32,57 @@ export interface IdeaWriteContext {
 }
 
 export interface IdeaRepository {
-  saveMany(ideas: PlannedIdea[], context?: IdeaWriteContext): IdeaRecord[];
-  list(query?: IdeaQuery): PlannedIdea[];
-  listRecords(query?: IdeaQuery): IdeaRecord[];
-  count(): number;
+  saveMany(
+    ideas: PlannedIdea[],
+    context?: IdeaWriteContext,
+  ): Promise<IdeaRecord[]>;
+  list(query?: IdeaQuery): Promise<PlannedIdea[]>;
+  listRecords(query?: IdeaQuery): Promise<IdeaRecord[]>;
+  count(): Promise<number>;
 }
 
 export interface DraftRepository {
-  saveMany(drafts: GeneratedDraft[]): DraftRecord[];
-  list(query?: DraftQuery): GeneratedDraft[];
-  listRecords(query?: DraftQuery): DraftRecord[];
-  listPreviews(query?: DraftQuery, previewLength?: number): DraftPreview[];
-  findLatestByIdea(ideaId: string): DraftRecord | null;
-  count(): number;
+  saveMany(drafts: GeneratedDraft[]): Promise<DraftRecord[]>;
+  list(query?: DraftQuery): Promise<GeneratedDraft[]>;
+  listRecords(query?: DraftQuery): Promise<DraftRecord[]>;
+  listPreviews(
+    query?: DraftQuery,
+    previewLength?: number,
+  ): Promise<DraftPreview[]>;
+  findLatestByIdea(ideaId: string): Promise<DraftRecord | null>;
+  count(): Promise<number>;
 }
 
 export interface PostResultRepository {
-  save(result: PostResult): PostResultRecord;
-  list(query?: PostResultQuery): PostResult[];
-  listRecords(query?: PostResultQuery): PostResultRecord[];
+  save(result: PostResult): Promise<PostResultRecord>;
+  list(query?: PostResultQuery): Promise<PostResult[]>;
+  listRecords(query?: PostResultQuery): Promise<PostResultRecord[]>;
   listSummaries(
     query?: PostResultQuery,
     previewLength?: number,
-  ): PostResultSummary[];
-  summarize(): EngagementSnapshot;
-  count(): number;
+  ): Promise<PostResultSummary[]>;
+  summarize(): Promise<EngagementSnapshot>;
+  count(): Promise<number>;
 }
 
 export interface InsightRepository {
-  save(type: InsightType, content: string): MemoryInsight;
-  list(query?: InsightQuery): MemoryInsight[];
+  save(type: InsightType, content: string): Promise<MemoryInsight>;
+  list(query?: InsightQuery): Promise<MemoryInsight[]>;
   listPreviews(
     query?: InsightQuery,
     previewLength?: number,
-  ): InsightPreview[];
-  latestByType(previewLength?: number): Record<InsightType, InsightPreview | null>;
-  count(): number;
+  ): Promise<InsightPreview[]>;
+  latestByType(
+    previewLength?: number,
+  ): Promise<Record<InsightType, InsightPreview | null>>;
+  count(): Promise<number>;
 }
 
 export interface DashboardRepository {
-  getSnapshot(query?: DashboardQuery): DashboardSnapshot;
+  getSnapshot(query?: DashboardQuery): Promise<DashboardSnapshot>;
   getRecentActivity(
     query?: Pick<DashboardQuery, "activityLimit" | "previewLength">,
-  ): RecentActivityItem[];
+  ): Promise<RecentActivityItem[]>;
 }
 
 export interface RepositorySnapshot {
@@ -90,7 +98,7 @@ export interface HealthlogRepository {
   postResults: PostResultRepository;
   insights: InsightRepository;
   dashboard: DashboardRepository;
-  getSnapshot(): RepositorySnapshot;
+  getSnapshot(): Promise<RepositorySnapshot>;
 }
 
 export type {

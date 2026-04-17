@@ -99,11 +99,11 @@ export function getDashboardSnapshot(query: DashboardQuery = {}) {
   return healthlogRepository.dashboard.getSnapshot(query);
 }
 
-export function getRepositorySnapshot(): RepositorySnapshot {
+export function getRepositorySnapshot() {
   return healthlogRepository.getSnapshot();
 }
 
-export function getMemoryStoreSnapshot(): RepositorySnapshot {
+export function getMemoryStoreSnapshot() {
   return getRepositorySnapshot();
 }
 

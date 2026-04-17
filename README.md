@@ -15,6 +15,7 @@ HealthLog AI Marketing Team의 초기 MVP 저장소다.
 - [PRD](./docs/prd/README.md)
 - [Codex Multi-Agent Working Plan](./docs/prd/codex-multi-agent-workflow.md)
 - [Mock to Real Transition Plan](./docs/prd/mock-to-real-transition-plan.md)
+- [DB Architecture & Execution Plan](./docs/prd/db.md)
 
 ## 시작 방법
 
@@ -33,6 +34,6 @@ npm run dev
 다음 단계:
 
 - OpenAI Responses API 연결
-- 실제 DB 연결
+- Supabase Postgres 연결
 - 게시 성과 히스토리 조회
 - 발행 큐 또는 예약 발행

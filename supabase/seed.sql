@@ -1,0 +1,2 @@
+-- Seed data for local resets and shared development environments.
+-- Keep this file minimal and idempotent as the project evolves.

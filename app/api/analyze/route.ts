@@ -25,14 +25,14 @@ export async function POST(request: Request) {
       notes: input.notes,
     };
 
-    healthlogRepository.postResults.save(result);
+    await healthlogRepository.postResults.save(result);
 
-    const allResults = healthlogRepository.postResults.list();
+    const allResults = await healthlogRepository.postResults.list();
     const summary = await analystAgent(allResults);
 
-    healthlogRepository.insights.save("hook", summary.bestHookPattern);
-    healthlogRepository.insights.save("weakness", summary.weakPattern);
-    healthlogRepository.insights.save("strategy", summary.nextStrategy);
+    await healthlogRepository.insights.save("hook", summary.bestHookPattern);
+    await healthlogRepository.insights.save("weakness", summary.weakPattern);
+    await healthlogRepository.insights.save("strategy", summary.nextStrategy);
 
     return successResponse(
       {

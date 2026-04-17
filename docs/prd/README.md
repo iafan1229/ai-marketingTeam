@@ -10,6 +10,7 @@
 - 관련 문서:
   - [Codex Multi-Agent Working Plan](./codex-multi-agent-workflow.md)
   - [Mock to Real Transition Plan](./mock-to-real-transition-plan.md)
+  - [DB Architecture & Execution Plan](./db.md)
 
 ## 1. 배경
 
@@ -235,7 +236,7 @@ MVP는 아래 3개 에이전트와 1개 사용자 역할로 구성한다.
 - 프론트엔드: Next.js 관리자 UI
 - 서버: Next.js Route Handler
 - AI 호출: OpenAI Responses API
-- 저장소: SQLite 또는 Postgres
+- 저장소: Supabase Postgres
 - 에이전트 구조: 함수 단위 agent 모듈
 
 예상 초기 엔드포인트:

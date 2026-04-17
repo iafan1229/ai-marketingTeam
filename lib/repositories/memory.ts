@@ -121,10 +121,10 @@ export function createMemoryHealthlogRepository(): HealthlogRepository {
 
   return {
     ideas: {
-      saveMany(
+      async saveMany(
         ideas: PlannedIdea[],
         context: IdeaWriteContext = {},
-      ): IdeaRecord[] {
+      ): Promise<IdeaRecord[]> {
         const createdAt = context.createdAt ?? new Date().toISOString();
         const records = ideas.map((idea) =>
           createIdeaRecord(idea, { ...context, createdAt }),
@@ -134,20 +134,20 @@ export function createMemoryHealthlogRepository(): HealthlogRepository {
 
         return cloneIdeaRecords(records);
       },
-      list(query: IdeaQuery = {}): PlannedIdea[] {
+      async list(query: IdeaQuery = {}): Promise<PlannedIdea[]> {
         return filterIdeaRecords(store.ideas, query).map((record) =>
           toIdea(cloneIdeaRecord(record)),
         );
       },
-      listRecords(query: IdeaQuery = {}): IdeaRecord[] {
+      async listRecords(query: IdeaQuery = {}): Promise<IdeaRecord[]> {
         return cloneIdeaRecords(filterIdeaRecords(store.ideas, query));
       },
-      count(): number {
+      async count(): Promise<number> {
         return store.ideas.length;
       },
     },
     drafts: {
-      saveMany(drafts: GeneratedDraft[]): DraftRecord[] {
+      async saveMany(drafts: GeneratedDraft[]): Promise<DraftRecord[]> {
         const createdAt = new Date().toISOString();
         const records = drafts.map((draft) => createDraftRecord(draft, createdAt));
 
@@ -155,33 +155,33 @@ export function createMemoryHealthlogRepository(): HealthlogRepository {
 
         return records.map(cloneDraftRecord);
       },
-      list(query: DraftQuery = {}): GeneratedDraft[] {
+      async list(query: DraftQuery = {}): Promise<GeneratedDraft[]> {
         return filterDraftRecords(store.drafts, query).map((record) =>
           toDraft(cloneDraftRecord(record)),
         );
       },
-      listRecords(query: DraftQuery = {}): DraftRecord[] {
+      async listRecords(query: DraftQuery = {}): Promise<DraftRecord[]> {
         return filterDraftRecords(store.drafts, query).map(cloneDraftRecord);
       },
-      listPreviews(
+      async listPreviews(
         query: DraftQuery = {},
         previewLength?: number,
-      ): DraftPreview[] {
+      ): Promise<DraftPreview[]> {
         return listDraftPreviews(store.drafts, query, previewLength);
       },
-      findLatestByIdea(ideaId: string): DraftRecord | null {
+      async findLatestByIdea(ideaId: string): Promise<DraftRecord | null> {
         return (
           filterDraftRecords(store.drafts, { ideaId, limit: 1 }).map(
             cloneDraftRecord,
           )[0] ?? null
         );
       },
-      count(): number {
+      async count(): Promise<number> {
         return store.drafts.length;
       },
     },
     postResults: {
-      save(result: PostResult): PostResultRecord {
+      async save(result: PostResult): Promise<PostResultRecord> {
         const record = createPostResultRecord(result);
 
         store.postResults = mergeNewestById(
@@ -192,31 +192,31 @@ export function createMemoryHealthlogRepository(): HealthlogRepository {
 
         return clonePostResultRecord(record);
       },
-      list(query: PostResultQuery = {}): PostResult[] {
+      async list(query: PostResultQuery = {}): Promise<PostResult[]> {
         return filterPostResultRecords(store.postResults, query).map((record) =>
           toPostResult(clonePostResultRecord(record)),
         );
       },
-      listRecords(query: PostResultQuery = {}): PostResultRecord[] {
+      async listRecords(query: PostResultQuery = {}): Promise<PostResultRecord[]> {
         return filterPostResultRecords(store.postResults, query).map(
           clonePostResultRecord,
         );
       },
-      listSummaries(
+      async listSummaries(
         query: PostResultQuery = {},
         previewLength?: number,
-      ): PostResultSummary[] {
+      ): Promise<PostResultSummary[]> {
         return listPostResultSummaries(store.postResults, query, previewLength);
       },
-      summarize() {
+      async summarize(): Promise<ReturnType<typeof summarizeEngagement>> {
         return summarizeEngagement(store.postResults);
       },
-      count(): number {
+      async count(): Promise<number> {
         return store.postResults.length;
       },
     },
     insights: {
-      save(type: InsightType, content: string): MemoryInsight {
+      async save(type: InsightType, content: string): Promise<MemoryInsight> {
         const record = createInsightRecord(type, content);
 
         store.insights = mergeNewestById(
@@ -227,33 +227,33 @@ export function createMemoryHealthlogRepository(): HealthlogRepository {
 
         return cloneInsight(record);
       },
-      list(query: InsightQuery = {}): MemoryInsight[] {
+      async list(query: InsightQuery = {}): Promise<MemoryInsight[]> {
         return filterInsightRecords(store.insights, query).map(cloneInsight);
       },
-      listPreviews(
+      async listPreviews(
         query: InsightQuery = {},
         previewLength?: number,
-      ): InsightPreview[] {
+      ): Promise<InsightPreview[]> {
         return listInsightPreviews(store.insights, query, previewLength);
       },
-      latestByType(previewLength?: number) {
+      async latestByType(previewLength?: number) {
         return selectLatestInsightsByType(store.insights, previewLength);
       },
-      count(): number {
+      async count(): Promise<number> {
         return store.insights.length;
       },
     },
     dashboard: {
-      getSnapshot(query: DashboardQuery = {}): DashboardSnapshot {
+      async getSnapshot(query: DashboardQuery = {}): Promise<DashboardSnapshot> {
         return buildDashboardSnapshot(store, query);
       },
-      getRecentActivity(
+      async getRecentActivity(
         query: Pick<DashboardQuery, "activityLimit" | "previewLength"> = {},
-      ): RecentActivityItem[] {
+      ): Promise<RecentActivityItem[]> {
         return buildDashboardSnapshot(store, query).recentActivity;
       },
     },
-    getSnapshot(): RepositorySnapshot {
+    async getSnapshot(): Promise<RepositorySnapshot> {
       return {
         ideas: cloneIdeaRecords(store.ideas),
         ...cloneStore(store),

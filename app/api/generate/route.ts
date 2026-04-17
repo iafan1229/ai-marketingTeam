@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const input = parseCopywriterInput(body);
     const drafts = await copywriterAgent(input);
 
-    healthlogRepository.drafts.saveMany(drafts);
+    await healthlogRepository.drafts.saveMany(drafts);
 
     return successResponse(
       {

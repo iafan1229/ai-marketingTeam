@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const ideas = await plannerAgent(input);
     const sourceLineCount = countMeaningfulLines(input.notes);
 
-    healthlogRepository.ideas.saveMany(ideas, { sourceNotes: input.notes });
+    await healthlogRepository.ideas.saveMany(ideas, { sourceNotes: input.notes });
 
     return successResponse(
       { ideas },

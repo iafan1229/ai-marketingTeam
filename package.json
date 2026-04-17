@@ -6,10 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "db:push": "supabase db push",
+    "db:reset": "supabase db reset",
+    "db:status": "supabase status"
   },
   "dependencies": {
+    "@types/pg": "^8.20.0",
     "next": "latest",
+    "pg": "^8.20.0",
     "react": "latest",
     "react-dom": "latest"
   },
@@ -19,7 +24,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "latest",
+    "supabase": "^2.92.0",
     "typescript": "^5"
   }
 }
-

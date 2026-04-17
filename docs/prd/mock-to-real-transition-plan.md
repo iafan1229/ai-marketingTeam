@@ -10,6 +10,7 @@
 - 관련 문서:
   - [HealthLog AI Marketing Team PRD](./README.md)
   - [Codex Multi-Agent Working Plan](./codex-multi-agent-workflow.md)
+  - [DB Architecture & Execution Plan](./db.md)
 
 ## 1. 배경
 
@@ -28,6 +29,12 @@
 - 관리자 UI는 이미 manual loop 기준으로 동작한다.
 
 즉, 지금 단계의 핵심 과제는 UI를 새로 만드는 것이 아니라 `mock implementation을 실제 인프라로 안전하게 치환하는 것`이다.
+
+현재 구조 기준으로는 아래 상태까지 정리된 것으로 본다.
+
+- Phase 0 성격의 API contract 정리는 진행 중이다.
+- Phase 1인 persistence 추상화는 적용되었다.
+- 현재 남은 핵심 작업은 `memory repository -> hosted Postgres repository` 교체다.
 
 ## 2. 전환 목표
 
@@ -60,6 +67,7 @@
 
 - API contract first: 프론트가 기대하는 request/response shape를 먼저 고정한다.
 - DB first, AI second: 저장 구조를 먼저 실제화하고 생성 로직은 그다음 연결한다.
+- Hosted first: 로컬 DB보다 외부에서 항상 살아 있는 DB를 우선 기준으로 잡는다.
 - Route thin, service thick: Route Handler는 얇게 유지하고 실제 흐름은 service 계층으로 이동한다.
 - Mock fallback 유지: 초기 전환 단계에서는 mock adapter를 제거하지 않고 fallback 또는 비교 기준으로 남긴다.
 - Human approval 유지: 초안 생성 이후 사람 승인 프로세스는 유지한다.
@@ -86,6 +94,7 @@
 - route가 validation, orchestration, persistence를 함께 처리한다.
 - mock 여부가 응답 메타에 고정되어 있어 real 환경으로 전환해도 응답 구조를 다시 손봐야 한다.
 - Planner / Copywriter / Analyst가 아직 실제 AI 호출이나 장기 메모리 활용 구조와 직접 연결되어 있지 않다.
+- 개발과 운영 모두를 고려한 hosted DB 표준이 아직 정해져 있지 않다.
 
 ## 6. 목표 아키텍처
 
@@ -96,7 +105,12 @@
 - Service: 계획, 생성, 분석 흐름 orchestration 담당
 - Repository: idea / draft / post result / insight 단위 persistence 담당
 - AI Client: OpenAI Responses API 호출 담당
-- DB: Postgres 우선 권장
+- DB: Supabase-hosted Postgres 우선
+
+환경별 운영 기준은 아래를 권장한다.
+
+- 개발: Supabase Free
+- 운영: pause 없는 hosted Postgres 또는 Supabase paid plan
 
 권장 레이어 구조는 아래와 같다.
 
@@ -167,14 +181,39 @@
 
 권장 선택:
 
-- 배포와 확장성을 고려해 `Postgres` 우선
+- 개발 DB: `Supabase Free`
+- 운영 DB: `Supabase paid plan` 또는 동급의 always-on hosted Postgres
 
 작업:
 
-- ORM 또는 query layer를 선택한다.
-- schema와 migration 체계를 도입한다.
+- query layer는 현재 구조에 맞춰 `pg`를 우선 사용한다.
+- Supabase CLI 기반 schema / migration 체계를 도입한다.
 - `.env` 기반 DB connection 설정을 추가한다.
-- 로컬 개발용 seed 또는 bootstrap 전략을 정한다.
+- `memory | postgres` 저장소 전환 스위치를 넣는다.
+- Supabase Free 기준 seed 또는 bootstrap 전략을 정한다.
+
+Supabase 기준 실행 항목:
+
+- `supabase/` 디렉터리 생성
+- `supabase/migrations/*` 관리 시작
+- `supabase/seed.sql` 추가
+- `npx supabase init`
+- `npx supabase link --project-ref <project-ref>`
+- `npx supabase db push`
+
+환경 변수 초안:
+
+- `REPOSITORY_DRIVER`
+- `DATABASE_URL`
+- `DATABASE_URL_DIRECT`
+- `DATABASE_SSL`
+- `SUPABASE_PROJECT_REF`
+
+연결 전략:
+
+- 로컬 개발 서버: direct connection 또는 session pooler
+- 서버리스/짧은 수명 런타임: transaction pooler
+- migration / 관리 명령: direct connection 우선
 
 우선 생성할 테이블:
 
@@ -201,6 +240,7 @@
 완료 기준:
 
 - 서버 재시작 후에도 초안, 성과, 인사이트가 유지된다.
+- `REPOSITORY_DRIVER=postgres`로 실행 시 현재 UI 흐름이 그대로 동작한다.
 
 ### Phase 3. Service 계층 도입
 
@@ -296,17 +336,19 @@ route 책임은 아래 수준으로 축소한다.
 작업:
 
 - `mock`, `hybrid`, `real` 모드를 환경 변수로 구분한다.
-- staging에서 `real DB + mock AI` 조합을 먼저 검증한다.
+- 개발 단계에서는 `Supabase Free + mock AI` 조합을 먼저 검증한다.
+- staging에서 `real DB + mock AI` 조합을 검증한다.
 - 이후 `real DB + real AI` 조합을 검증한다.
 - request id 기준 로그 추적 체계를 정리한다.
 - rate limit, timeout, malformed output 대응을 넣는다.
 
 권장 롤아웃 순서:
 
-1. local: real DB + mock agents
-2. staging: real DB + mock agents
-3. staging: real DB + real Planner/Copywriter
-4. production: real DB + real Planner/Copywriter + analyst hybrid
+1. local: `memory` repository
+2. local: `Supabase Free + mock agents`
+3. staging: `hosted Postgres + mock agents`
+4. staging: `hosted Postgres + real Planner/Copywriter`
+5. production: `always-on hosted Postgres + real Planner/Copywriter + analyst hybrid`
 
 완료 기준:
 
@@ -334,15 +376,17 @@ route 책임은 아래 수준으로 축소한다.
 
 담당:
 
+- Supabase project setup
 - schema
 - migration
-- repository
+- postgres repository
 - seed/factory
 
 예상 파일:
 
 - `lib/db/*` 또는 `db/*`
 - `lib/repositories/*`
+- `supabase/*`
 
 #### Track 3. AI Integration
 
@@ -472,15 +516,18 @@ route 책임은 아래 수준으로 축소한다.
 
 실제 구현 착수 순서는 아래를 권장한다.
 
-1. API contract 문서화 및 response meta 정리
-2. repository interface 분리
-3. Postgres 및 migration 도입
-4. memory adapter와 real repository 병행 구성
-5. service 계층 도입
-6. Planner / Copywriter 실제 AI 연동
-7. Analyst hybrid 구조 도입
-8. staging 검증
-9. production 컷오버
+1. Supabase Free 프로젝트 생성 및 연결 문자열 확보
+2. `.env.example`과 repository driver 규칙 정리
+3. `supabase/` migration/seed 구조 도입
+4. `content_ideas`, `content_drafts`, `post_results`, `memory_insights` 스키마 작성
+5. postgres repository adapter 구현
+6. `memory`와 `postgres` 저장소 병행 전환 구성
+7. 현재 `plan / generate / analyze` 흐름 검증
+8. service 계층 도입
+9. Planner / Copywriter 실제 AI 연동
+10. Analyst hybrid 구조 도입
+11. staging 검증
+12. production 컷오버
 
 ## 12. 현재 결론
 
@@ -492,4 +539,4 @@ route 책임은 아래 수준으로 축소한다.
 - route 중심 구조를 service/repository 구조로 재배치
 - mock agent를 실제 AI 호출로 단계적으로 치환
 
-가장 안전한 전략은 `DB 먼저, AI 나중, mock fallback 유지`다.
+가장 안전한 전략은 `Supabase Free로 개발 시작 -> hosted Postgres 검증 -> AI 연동 -> 운영 전환`이다.
