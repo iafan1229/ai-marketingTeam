@@ -638,6 +638,7 @@ select:focus-visible {
   display: grid;
   gap: 10px;
   cursor: pointer;
+  padding-left: 48px;
 }
 
 .idea.is-selected {
@@ -648,8 +649,12 @@ select:focus-visible {
 
 .idea-radio {
   position: absolute;
-  opacity: 0;
-  pointer-events: none;
+  top: 18px;
+  left: 18px;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--planner);
 }
 
 .idea-topline,

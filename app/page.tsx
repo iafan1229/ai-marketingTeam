@@ -290,14 +290,14 @@ export default function HomePage() {
           <article className="card card-tone-planner">
             <div className="section-head">
               <div className="section-heading">
-                <span className="section-index">Step 01</span>
-                <h2>1. Source Notes</h2>
+                <span className="section-index">단계 01</span>
+                <h2>1. 메모 입력</h2>
                 <p>
                   업데이트, 사용자 피드백, 관찰 메모를 모아 Planner에게 오늘의
                   주제 후보를 맡긴다.
                 </p>
               </div>
-              <span className="hint">Planner Input</span>
+              <span className="hint">입력 메모</span>
             </div>
             <div className="field">
               <label htmlFor="notes">마케팅 입력 메모</label>
@@ -326,17 +326,17 @@ export default function HomePage() {
           <article className="card card-tone-planner">
             <div className="section-head">
               <div className="section-heading">
-                <span className="section-index">Step 02</span>
-                <h2>2. Planned Ideas</h2>
+                <span className="section-index">단계 02</span>
+                <h2>2. 추천 주제</h2>
                 <p>오늘 올릴 만한 콘텐츠 후보를 고르고 Copywriter로 넘긴다.</p>
               </div>
-              <span className="hint">Planner Output</span>
+              <span className="hint">추천 결과</span>
             </div>
             {selectedIdea ? (
               <div className="selected-brief">
                 <div className="selected-brief-head">
                   <div>
-                    <span className="micro-label">Selected brief</span>
+                    <span className="micro-label">선택한 주제</span>
                     <strong>{selectedIdea.theme}</strong>
                   </div>
                   <span className="tag">{selectedIdea.goal}</span>
@@ -370,7 +370,7 @@ export default function HomePage() {
                       onChange={() => setSelectedIdeaId(idea.id)}
                     />
                     <div className="idea-topline">
-                      <span className="idea-badge">Option {index + 1}</span>
+                      <span className="idea-badge">후보 {index + 1}</span>
                       <span className="tag">{idea.goal}</span>
                     </div>
                     <header>
@@ -412,22 +412,22 @@ export default function HomePage() {
           <article className="card card-tone-copy">
             <div className="section-head">
               <div className="section-heading">
-                <span className="section-index">Step 03</span>
-                <h2>3. Drafts</h2>
+                <span className="section-index">단계 03</span>
+                <h2>3. 초안 목록</h2>
                 <p>
                   Copywriter가 선택한 주제를 여러 버전의 Threads 초안으로 풀어낸다.
                 </p>
               </div>
-              <span className="hint">Copywriter Output</span>
+              <span className="hint">초안 결과</span>
             </div>
             <div className="selected-brief draft-context">
               <div className="selected-brief-head">
                 <div>
-                  <span className="micro-label">Copywriter input</span>
+                  <span className="micro-label">초안 기준</span>
                   <strong>{selectedIdea?.theme ?? "주제 선택 대기"}</strong>
                 </div>
                 <span className="tag">
-                  {selectedIdea?.goal ?? "Planner required"}
+                  {selectedIdea?.goal ?? "주제 필요"}
                 </span>
               </div>
               <p>
@@ -447,11 +447,11 @@ export default function HomePage() {
                     }`}
                   >
                     <div className="draft-topline">
-                      <span className="idea-badge">Draft {index + 1}</span>
+                      <span className="idea-badge">초안 {index + 1}</span>
                       <div className="tag-cluster">
                         <span className="tag">{draft.platform}</span>
                         {selectedDraft?.id === draft.id ? (
-                          <span className="tag tag-success">Analyst input</span>
+                          <span className="tag tag-success">분석 연결됨</span>
                         ) : null}
                       </div>
                     </div>
@@ -487,50 +487,14 @@ export default function HomePage() {
         </div>
 
         <div className="column column-side">
-          <article className="card rail-card">
-            <div className="section-head">
-              <div className="section-heading">
-                <span className="section-index">Ops Guide</span>
-                <h2>Manual approval checkpoints</h2>
-                <p>
-                  이 MVP는 완전 자동화보다 handoff를 명확히 보는 데 집중한다.
-                </p>
-              </div>
-              <span className="hint">Review before ship</span>
-            </div>
-            <div className="checkpoint-list">
-              <div className="checkpoint">
-                <span className="checkpoint-role">Planner</span>
-                <strong>메모가 충분한지 먼저 확인</strong>
-                <p>
-                  업데이트, 피드백, 관찰 포인트를 넣은 뒤 주제 후보를 생성한다.
-                </p>
-              </div>
-              <div className="checkpoint">
-                <span className="checkpoint-role">Copywriter</span>
-                <strong>가장 설득력 있는 angle 하나를 선택</strong>
-                <p>
-                  선택한 주제로 초안을 만든 뒤 게시할 버전이나 실험할 버전을 고른다.
-                </p>
-              </div>
-              <div className="checkpoint">
-                <span className="checkpoint-role">Analyst</span>
-                <strong>실제 반응과 정성 메모를 함께 남김</strong>
-                <p>
-                  수치만이 아니라 댓글 톤과 저장 이유까지 적어야 다음 전략이 선명해진다.
-                </p>
-              </div>
-            </div>
-          </article>
-
           <article className="card card-tone-analyst">
             <div className="section-head">
               <div className="section-heading">
-                <span className="section-index">Step 04</span>
-                <h2>4. Manual Result Input</h2>
+                <span className="section-index">단계 04</span>
+                <h2>4. 성과 입력</h2>
                 <p>게시 후 성과를 직접 적어주면 Analyst가 패턴을 정리한다.</p>
               </div>
-              <span className="hint">Manual Loop MVP</span>
+              <span className="hint">분석 입력</span>
             </div>
             <div className="snapshot-strip">
               <div className="mini-stat">
@@ -555,7 +519,7 @@ export default function HomePage() {
             <div className="selected-brief analysis-target">
               <div className="selected-brief-head">
                 <div>
-                  <span className="micro-label">Current analysis target</span>
+                  <span className="micro-label">현재 분석 대상</span>
                   <strong>
                     {selectedDraft
                       ? selectedDraft.hook
@@ -692,11 +656,11 @@ export default function HomePage() {
           <article className="card card-tone-analyst">
             <div className="section-head">
               <div className="section-heading">
-                <span className="section-index">Step 05</span>
-                <h2>5. Analyst Summary</h2>
+                <span className="section-index">단계 05</span>
+                <h2>5. 분석 요약</h2>
                 <p>최근 성과를 바탕으로 다음에 반복할 포맷을 잡는다.</p>
               </div>
-              <span className="hint">Analyst Output</span>
+              <span className="hint">분석 결과</span>
             </div>
             {!analysis ? (
               <div className="empty">
@@ -721,15 +685,15 @@ export default function HomePage() {
                 </div>
                 <div className="summary-grid">
                   <div className="summary-box">
-                    <strong>Best Hook Pattern</strong>
+                    <strong>잘된 훅 패턴</strong>
                     <span>{analysis.bestHookPattern}</span>
                   </div>
                   <div className="summary-box">
-                    <strong>Weak Pattern</strong>
+                    <strong>약한 패턴</strong>
                     <span>{analysis.weakPattern}</span>
                   </div>
                   <div className="summary-box">
-                    <strong>Next Strategy</strong>
+                    <strong>다음 전략</strong>
                     <span>{analysis.nextStrategy}</span>
                   </div>
                 </div>
